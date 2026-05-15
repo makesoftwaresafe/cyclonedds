@@ -64,6 +64,12 @@ option(BUILD_DDSPERF "Build ddsperf tool" ${not_crosscompiling})
 
 option(WITH_ZEPHYR "Build for Zephyr RTOS" OFF)
 
+# Check if IDLC is already in the PATH
+find_library(_idlc_backend "cycloneddsidlc" NO_CMAKE_FIND_ROOT_PATH)
+if(BUILD_IDLC OR (CMAKE_CROSSCOMPILING AND _idlc_backend))
+  set(HAVE_IDLC ON CACHE BOOL "IDLC is going to be built or already found on system")
+endif()
+
 # We require C99, test code can benefit from C23
 if(CMAKE_VERSION VERSION_LESS "3.21" OR MSVC)
   set(CMAKE_C_STANDARD 99)
@@ -417,11 +423,11 @@ set(generated_defconfig_src  "${CMAKE_CURRENT_SOURCE_DIR}/src/core/ddsi/defconfi
 
 add_subdirectory(compat)
 add_subdirectory(src)
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES AND HAVE_IDLC)
   add_subdirectory(examples)
 endif()
 
-if(DEFINED ENV{LIB_FUZZING_ENGINE})
+if(DEFINED ENV{LIB_FUZZING_ENGINE} AND BUILD_IDLC)
   add_subdirectory(fuzz)
 endif()
 
